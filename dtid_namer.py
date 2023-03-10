@@ -13,12 +13,12 @@ from schema import Schema, Use
 # your object needs to have a specific shape/form)
 DTID_COMPONENTS_SCHEMA = Schema(
     {
-        "ss_file_id": str,
+        "document_id": str,
         "tabletype": str,
         "tnum": Use(str),
     }
 )
-DTID_COMPONENTS = ["ss_file_id", "tabletype", "tnum"]
+DTID_COMPONENTS = ["document_id", "tabletype", "tnum"]
 separator = "/"
 
 parse_workspace_name = get_name_parser(DTID_COMPONENTS, separator=separator)
@@ -31,7 +31,7 @@ class DTIDNamer(BaseNamer):
     """
     namer for unique identifier for document_tables.
 
-    format: <ss_file_id>/<tabletype>/<tnum>
+    format: <document_id>/<tabletype>/<tnum>
     """
 
     _schematic = DTID_COMPONENTS_SCHEMA

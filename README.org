@@ -18,7 +18,7 @@
 #+OPTIONS: ^:nil
 #+LATEX_COMPILER: pdflatex
 
-* FXR Python coding challenge - february
+* introduction
 
 this coding challenge is about rewriting an existing implementation with the
 goal of improving performance and code structure.
