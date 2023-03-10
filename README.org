@@ -1,0 +1,99 @@
+#+TITLE: FXR Python coding challenge - february
+#+BIND: org-export-use-babel nil
+#+AUTHOR: July
+#+EMAIL: <july@fxr-insights.com>
+#+DATE: February, 2023
+#+LATEX: \setlength\parindent{0pt}
+#+LATEX_HEADER: \usepackage{minted}
+#+LATEX_HEADER: \usepackage[margin=1.2in]{geometry}
+#+LATEX_HEADER: \usepackage{mathpazo}
+#+LATEX_HEADER: \usepackage{adjustbox}
+#+LATEX_HEADER_EXTRA:  \usepackage{mdframed}
+#+LATEX_HEADER_EXTRA: \BeforeBeginEnvironment{minted}{\begin{mdframed}}
+#+LATEX_HEADER_EXTRA: \AfterEndEnvironment{minted}{\end{mdframed}}
+#+LATEX_HEADER_EXTRA: \BeforeBeginEnvironment{tabular}{\begin{adjustbox}{center}}
+#+LATEX_HEADER_EXTRA: \AfterEndEnvironment{tabular}{\end{adjustbox}}
+#+MACRO: NEWLINE @@latex:\\@@ @@html:<br>@@
+#+PROPERTY: header-args :exports both :session fxr-coding-challenge-feb-2023 :cache :results value
+#+OPTIONS: ^:nil
+#+LATEX_COMPILER: pdflatex
+
+* FXR Python coding challenge - february
+
+this coding challenge is about rewriting an existing implementation with the
+goal of improving performance and code structure.
+
+in our codebase, we have the need for the following functionality: we need to
+format and parse strings which are composed out of multiple components. we call
+these =namers=. formatting means that we take the components (in a dictionary)
+and put them together into a string. parsing means that we take a string and
+extract the the components from it.
+
+* example: DTIDNamer
+
+for instance, we do this for a =dtid=, which is a unique identifier for a
+document table (one table inside one document). a dtid is the combination of
+three components, separated by a =/=:
+1. the document id
+2. the type of table
+3. the tnum (i.e., this is the ith table of this type in this document)
+
+so for the =dtid=, formatting would mean:
+
+#+BEGIN_SRC python
+DTIDNamer({"document_id": "1234", "tabletype": "some-org_2", "tnum": 3}).name
+# => "1234/some-org_2/3"
+#+END_SRC
+
+and parsing would mean:
+
+#+BEGIN_SRC python
+DTIDNamer("1234/some-org_2/3").components
+# => {"document_id": "1234", "tabletype": "some-org_2", "tnum": 3}
+#+END_SRC
+
+* the challenge
+
+we have an implementation, but we are not happy with it, because:
+- it does not work so well on large volumes of data. we have class methods to
+  parse a =pd.Series= of names, and format a =pd.DataFrame= of components, but
+  under the hood, this needs to create an instance for every row, because the
+  actual parsing and formatting is not vectorized.
+- it uses the inheritance pattern, and we prefer composition over inheritance.
+
+so we want you to rewrite this implementation in a way that these two issues
+are solved (where the first issue is the most important).
+
+we want you to make this work specifically for =dtid='s, but it should be
+generalizable to work for any namer, even ones with different formatting and
+parsing strategies than just concatenating strings with a separator.
+
+** writing tests
+
+we haven't included the unittests for this implementation, so we strongly
+recommend that the first thing you do is to write some [[https://docs.python.org/3/library/unittest.html][unittests]] for the
+existing implementation, making sure you cover all the cases / methods (so:
+single parsing, single formatting, and multiple parsing and formatting).
+
+if you get stuck, you can ask for the unittests and we'll provide them.
+
+once you have the unittests, you can start writing a new implementation, using
+the unittests to test that your new implementation works in the same way.
+
+** making it work for another namer
+
+in the files, we've also included another namer, which has a bit of a different
+functionality. it is not necessary to fully reimplement it, but you get bonus
+points if (you think about how) your new implementation would support it.
+
+* getting started
+
+check out the zip, it contains the existing implementatation. you can install
+the dependencies with:
+
+#+BEGIN_SRC python
+cd path/to/extracted/zip_directory
+pip install -r requirements.txt
+#+END_SRC
+
+(tip: use a virtualenv!)
