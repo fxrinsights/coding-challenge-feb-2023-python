@@ -82,18 +82,23 @@ the unittests to test that your new implementation works in the same way.
 
 ** making it work for another namer
 
-in the files, we've also included another namer, which has a bit of a different
+we've also included another namer, which has a bit of a different
 functionality. it is not necessary to fully reimplement it, but you get bonus
 points if (you think about how) your new implementation would support it.
 
 * getting started
 
-check out the zip, it contains the existing implementatation. you can install
-the dependencies with:
+first, [[https://docs.github.com/en/get-started/quickstart/fork-a-repo][fork]] the repository to your own github account. then clone it to your
+machine.
+
+you can install the dependencies with:
 
 #+BEGIN_SRC python
-cd path/to/extracted/zip_directory
+cd path/to/cloned/repo
 pip install -r requirements.txt
 #+END_SRC
 
 (tip: use a virtualenv!)
+
+then, you can start working on the refactor. push your changes to github. once
+you're done, send us the link of your repo.
