@@ -187,9 +187,7 @@ class BaseNamer(object):
                 **kwargs,
             )
 
-        return components_df[
-            present_keys_in_components_df
-        ].fxr_utils.apply_rows_unique(_format_row)
+        return components_df[present_keys_in_components_df].apply(_format_row)
 
     @classmethod
     def parse_names_series(cls, names, **kwargs):
@@ -206,8 +204,9 @@ class BaseNamer(object):
         if not isinstance(names, pd.Series):
             names = pd.Series(names)
 
+        components = names.apply(cls.parse, **kwargs).tolist()
         return pd.DataFrame(
-            names.apply(cls.parse, **kwargs).tolist(),
+            components,
             columns=cls.component_keys,
             index=names.index,
         )

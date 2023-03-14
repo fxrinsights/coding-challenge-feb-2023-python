@@ -54,19 +54,28 @@ DTIDNamer("1234/some-org_2/3").components
 
 * the challenge
 
-we have an implementation, but we are not happy with it, because:
-- it does not work so well on large volumes of data. we have class methods to
-  parse a =pd.Series= of names, and format a =pd.DataFrame= of components, but
-  under the hood, this needs to create an instance for every row, because the
-  actual parsing and formatting is not vectorized.
-- it uses the inheritance pattern, and we prefer composition over inheritance.
+we have an implementation, but we are not happy with it, because of two reasons.
 
-so we want you to rewrite this implementation in a way that these two issues
-are solved (where the first issue is the most important).
+1. it does not work so well on large volumes of data. we have class methods to
+   format a =pd.DataFrame= of components (=format_components_df=), and parse a
+   =pd.Series= of names (=parse_names_series=). but under the hood, they have
+   to create an instance for every row, because the actual parsing and
+   formatting is not vectorized. if you look at the two functions, you can see
+   that they both use pandas' =.apply=. we would instead like to use pandas
+   methods, like =.str.split= and =.str.join=.
+2. it uses the inheritance pattern, and we prefer composition over inheritance.
+
+so we want you to *comprehensively rewrite* this implementation in a way that
+these two issues are solved (where the first issue is, of course, the most
+important).
 
 we want you to make this work specifically for =dtid='s, but it should be
 generalizable to work for any namer, even ones with different formatting and
 parsing strategies than just concatenating strings with a separator.
+
+to give you a pointer in the right direction: we would think about initializing
+a namer with a novel class instance which is responsible for implementing
+formatting and parsing, for both vectorized and unvectorized cases.
 
 ** writing tests
 
@@ -83,8 +92,9 @@ the unittests to test that your new implementation works in the same way.
 ** making it work for another namer
 
 we've also included another namer, which has a bit of a different
-functionality. it is not necessary to fully reimplement it, but you get bonus
-points if (you think about how) your new implementation would support it.
+functionality. it is not necessary to fully reimplement it (although that would
+definitely be awesome), but you should comment about how your new
+implementation would support it on a high level.
 
 * getting started
 
