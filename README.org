@@ -1,4 +1,4 @@
-#+TITLE: FXR Python coding challenge - february
+#+TITLE: FXR Python coding challenge - february 2023
 #+BIND: org-export-use-babel nil
 #+AUTHOR: July
 #+EMAIL: <july@fxr-insights.com>
@@ -52,39 +52,89 @@ DTIDNamer("1234/some-org_2/3").components
 # => {"document_id": "1234", "tabletype": "some-org_2", "tnum": 3}
 #+END_SRC
 
+* problems with the current implementation
+
+we have an implementation, but we are not so happy with it, because it's pretty
+slow.
+
+** no vectorized implementation
+
+we actually mainly use these namers on sequences of data (pandas DataFrames and
+Series). we have class methods to format a =pd.DataFrame= of components
+(=format_components_df=), and parse a =pd.Series= of names
+(=parse_names_series=). however, under the hood, they create a namer instance
+for every row, because the actual parsing and formatting is not vectorized. if
+you inspect those functions, you can see that they both use pandas'
+=.apply=. we would instead like to use vectorized pandas methods, like
+=.str.split= and =.str.join=.
+
+keep in mind that different namers might have different parsing and formatting
+strategies (e.g. not just splitting and joining using a certain separator), so
+namers are responsible for defining that strategy (but the strategy could be
+bundled in a class).
+
+** a slow validation library
+
+the validation library we are using, [[https://github.com/keleshev/schema/][schema]], is very slow, and *does not*
+support vectorized validation.
+
+we use this validation for two things:
+- if you try to initialize the class with a dictionary which is incomplete or
+  whose values have the wrong datatypes, an error is raised.
+- the =Use(str)= for the =tnum= attribute ensures that the =.validate= converts
+  an int to string, and it's nice to support that someone can pass an int as a
+  =tnum= (read more about this in the [[https://github.com/keleshev/schema#readme][README of the schema library]]).
+
+since this library does not support vectorized validation, and it's too slow to
+apply element-wise validation with it, we need an alternative way to validate
+(and if possible, do that int to str type conversion).
+
+we use schema in other parts of the code, and we are considering replacing it
+with [[https://horejsek.github.io/python-fastjsonschema/][fastjsonschema]] or [[https://docs.pydantic.dev/][pydantic]], so you might want to look into it. (or decide
+that a full library is not necessary for this part of the code; but flexible
+validation should remain easy to implement).
+
+** inheritance pattern
+
+in addition, the current implementation uses the inheritance pattern, and we
+prefer composition over inheritance. perhaps, there's a bit too much logic
+bundled in the BaseNamer class.
+
+you have freedom here to choose how much you want to invest in reorganising the
+code. it would be nice to see the implementation less clunky and more modular,
+but don't spend too much time on it.
+
 * the challenge
 
-we have an implementation, but we are not happy with it, because of two reasons.
-
-1. it does not work so well on large volumes of data. we have class methods to
-   format a =pd.DataFrame= of components (=format_components_df=), and parse a
-   =pd.Series= of names (=parse_names_series=). but under the hood, they have
-   to create an instance for every row, because the actual parsing and
-   formatting is not vectorized. if you look at the two functions, you can see
-   that they both use pandas' =.apply=. we would instead like to use pandas
-   methods, like =.str.split= and =.str.join=.
-2. it uses the inheritance pattern, and we prefer composition over inheritance.
-
-so we want you to *comprehensively rewrite* this implementation in a way that
-these two issues are solved (where the first issue is, of course, the most
-important).
+so we want you to comprehensively adapt the existing implementation to natively
+support large volumes of data (which also entails alternative validation).
 
 we want you to make this work specifically for =dtid='s, but it should be
 generalizable to work for any namer, even ones with different formatting and
 parsing strategies than just concatenating strings with a separator.
 
 to give you a pointer in the right direction: we would think about initializing
-a namer with a novel class instance which is responsible for implementing
-formatting and parsing, for both vectorized and unvectorized cases.
+a general Namer class with an instance of a (currently not existing) class
+which is responsible for implementing formatting and parsing, for both
+vectorized and unvectorized cases. so, perhaps something like:
+
+#+BEGIN_SRC python
+DTID_NAMER = Namer(some_parsing_and_formatting_strategy, **other_attributes)
+#+END_SRC
+
+note that DTID_NAMER wouldn't be an initializable class, but instead would have
+methods to immediately format and parse both individual values and
+dataframes/series.
+
+that's just a suggestion, feel free to do whatever you think is best.
 
 ** writing tests
 
 we haven't included the unittests for this implementation, so we strongly
 recommend that the first thing you do is to write some [[https://docs.python.org/3/library/unittest.html][unittests]] for the
 existing implementation, making sure you cover all the cases / methods (so:
-single parsing, single formatting, and multiple parsing and formatting).
-
-if you get stuck, you can ask for the unittests and we'll provide them.
+parsing a string, formatting a dict, parsing a series, and formatting a
+dataframe, as well as negative cases where you pass incomplete input).
 
 once you have the unittests, you can start writing a new implementation, using
 the unittests to test that your new implementation works in the same way.
@@ -96,10 +146,30 @@ functionality. it is not necessary to fully reimplement it (although that would
 definitely be awesome), but you should comment about how your new
 implementation would support it on a high level.
 
+** questions, etc.
+
+if you have any questions, let us know! (this is our first time creating a
+coding challenge, so we hope it's clear enough.) you can reach July by emailing
+=july @ [our domain name]=.
+
+good luck!
+
 * getting started
 
-first, [[https://docs.github.com/en/get-started/quickstart/fork-a-repo][fork]] the repository to your own github account. then clone it to your
-machine.
+** create a private fork
+
+please create a *private fork* by following the steps below. don't create a
+public fork, because other applicants might be able to read your solution. if
+you are unable to create a private fork, clone the repo, commit your solution,
+and send us a zip file of your solution.
+
+1. go to https://github.com/new/import
+2. enter the url of this repo, and create a new repository under your account
+   with visibility set to private.
+3. invite the following github users as collaborators: =jpjagt= and
+   =paulodder=.
+
+** setting up the environment
 
 you can install the dependencies with:
 
@@ -111,4 +181,4 @@ pip install -r requirements.txt
 (tip: use a virtualenv!)
 
 then, you can start working on the refactor. push your changes to github. once
-you're done, send us the link of your repo.
+you're done, please send us a message (:
